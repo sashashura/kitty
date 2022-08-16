@@ -3,6 +3,7 @@
 
 import importlib
 import os
+import shutil
 import warnings
 from contextlib import contextmanager
 from tempfile import TemporaryDirectory
@@ -25,12 +26,15 @@ def env_vars(**kw: str) -> Iterator[None]:
 
 def main() -> None:
     warnings.simplefilter('error')
+    gohome = os.path.expanduser('~/go')
+    go = shutil.which('go')
     current_home = os.path.expanduser('~') + os.sep
     paths = os.environ.get('PATH', '/usr/local/sbin:/usr/local/bin:/usr/bin').split(os.pathsep)
     path = os.pathsep.join(x for x in paths if not x.startswith(current_home))
     launcher_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kitty', 'launcher')
+    if go:
+        path = f'{os.path.dirname(go)}{os.pathsep}{path}'
     path = f'{launcher_dir}{os.pathsep}{path}'
-    gohome = os.path.expanduser('~/go')
     with TemporaryDirectory() as tdir, env_vars(
         PYTHONWARNINGS='error', HOME=tdir, USERPROFILE=tdir, PATH=path,
         XDG_CONFIG_HOME=os.path.join(tdir, '.config'),
